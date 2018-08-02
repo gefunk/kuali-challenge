@@ -43,6 +43,22 @@ class Elevator{
     function doorClose(){
         this.doorCloseHanlder(this.elevator_id);
     }
+    
+    /**
+    * handle request to go to floor
+    * @param {int} floor_no the floor that the request is asking the elevator to go to
+    * @return {boolean} if the request is successful or not
+    */
+    function request(floor_no){
+        if(this.trips == 100){
+            this.maintenanceMode = true;
+            return false;
+        }else{
+            this._moveToFloor(floor_no, this.doorOpen);
+            this.trips++;
+            return true;
+        }
+    }
    
 }
     
