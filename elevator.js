@@ -2,16 +2,16 @@
 * Represents an elevator
 */
 class Elevator{
+
     /**
     * constructor for elevator
     * @param {int} num_floors - the number of floors
-    * @param {doorOpenHandler} - register handler to recieve door open message
-    * @param {doorCloseHandler} - register handler to receive door close message
     */
-    constructor(elevator_id, num_floors, doorOpenHandler, doorCloseHandler){
+    constructor(elevator_id, num_floors, doorOpenHandler, doorCloseHandler, moveFloorHandler){
         // handlers to handle different events
         this.doorCloseHanlder = doorCloseHandler;
         this.doorOpenHandler = doorOpenHandler;        
+        this.moveFloorHandler = moveFloorHandler;
         // elevator ID assigned by controller
         this.elevator_id = elevator_id;
         // set num floors in building
@@ -21,6 +21,8 @@ class Elevator{
         // keeps track of how many trips before maintenance
         this.trips = 0;
         this.isOccupied = false;
+        // maintenance mode
+        this.maintenanceMode = false;
     }
     
     /**
@@ -43,7 +45,32 @@ class Elevator{
     function doorClose(){
         this.doorCloseHanlder(this.elevator_id);
     }
-    
+      
+    /**
+    * private function to move elevator to requested floor
+    */
+    function _moveToFloor(floor_no, callback){
+        if(this.current_floor == floor_no){
+            // elevator has reached floor
+            console.log("Elevator at "+this.floor_no);
+            this.doorOpen();
+        }else if(this.current_floor < floor_no){
+            this.current_floor += 1;
+            console.log("Elevator, "+this.elevator_id+" moving to floor: "+this.current_floor);
+            this.moveFloorHandler(this.current_floor);
+            // recursively call function to move up one floor
+            this._moveToFloor(floor_no);
+        }else if(this.current_floor > floor_no){
+            this.current_floor -= 1;
+            console.log("Elevator, "+this.elevator_id+" moving to floor: "+this.current_floor);
+            this.moveFloorHandler(this.current_floor);
+            // recursively call function to move down one floor
+            this._moveToFloor(floor_no);
+            
+        }
+
+    }
+      
     /**
     * handle request to go to floor
     * @param {int} floor_no the floor that the request is asking the elevator to go to
@@ -59,7 +86,15 @@ class Elevator{
             return true;
         }
     }
-   
-}
     
-      
+    /**
+    * Do maintenance, set this elevator to be available again
+    */
+    function doMaintenance(){
+        this.maintenanceMode = false;
+    }
+    
+    
+}
+
+module.exports = Elevator;
