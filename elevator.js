@@ -7,11 +7,12 @@ class Elevator{
     * constructor for elevator
     * @param {int} num_floors - the number of floors
     */
-    constructor(elevator_id, num_floors, doorOpenHandler, doorCloseHandler, moveFloorHandler){
+    constructor(elevator_id, num_floors, doorOpenHandler, doorCloseHandler, moveFloorHandler, maintenanceHandler){
         // handlers to handle different events
         this.doorCloseHanlder = doorCloseHandler;
         this.doorOpenHandler = doorOpenHandler;        
         this.moveFloorHandler = moveFloorHandler;
+        this.maintenanceHandler = maintenanceHandler;
         // elevator ID assigned by controller
         this.elevator_id = elevator_id;
         // set num floors in building
@@ -31,6 +32,8 @@ class Elevator{
     isOccupied(){
         return this.isOccupied;
     }
+    
+    
     
     /**
     * notifies registered handler of door open
@@ -79,6 +82,7 @@ class Elevator{
     function request(floor_no){
         if(this.trips == 100){
             this.maintenanceMode = true;
+            this.maintenanceHandler(this.elevator_id);
             return false;
         }else{
             this._moveToFloor(floor_no, this.doorOpen);
@@ -92,6 +96,14 @@ class Elevator{
     */
     function doMaintenance(){
         this.maintenanceMode = false;
+    }
+    
+
+    /**
+    * Helper function to signify if elevator is available
+    */
+    function isAvailable(){
+        return this.maintenanceMode;
     }
     
     

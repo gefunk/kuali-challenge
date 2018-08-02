@@ -3,18 +3,29 @@ let Elevator = require ("./elevator");
 
 class Controller{
     constructor(num_floors, num_elevators){
-        // initialize elevators with the number of elevators
-        this.elevators = {};
-        for(i = 0; i < num_elevators; i++){
-            this.elevators[i] = new Elevator(i, 5, elevatorDoorOpen, elevatorDoorClose);
-        }
         
         // initialize the number of floors
         // we will keep track of which elevator is on which floor here
         this.floors = {};
-        for(i = 0; i < num_floors; i++){
-            this.floors[i] = {};
+        for(var i = 0; i < num_floors; i++){
+            this.floors[i.toString()] = {};
         }
+        
+        // initialize available elevators
+        // keep track of available elevators in this object
+        this.floorsAvailableElevators = {};
+        for(var i = 0; i < num_floors; i++){
+            this.floorsAvailableElevators[i.toString()] = {};
+        }
+        
+        // initialize elevators with the number of elevators
+        for(var elevator_num = 0; i < num_elevators; i++){
+            let e = new Elevator(elevator_num, 5, elevatorDoorOpen, elevatorDoorClose);
+            this.floorsAvailableElevators.["1"].elevator_num = e;
+            this.floors.["1"].elevator_num = e;
+        }
+        
+
     }
     
     /** 
@@ -42,15 +53,19 @@ class Controller{
         for(var nextClosestFloorDown=floor_no; nextClosestFloorDown >= 1; nextClosestFloorDown--){
             
             // search the next closest floor upwards, max at the num floor
+            // this will never let a request for the elevator go past the max floor
             let nextClosestFloorUp = floor_no + (floor_no - nextClosestFloorDown);
             if(nextClosestFloorUp > num_floors){
                 nextClosestFloorUp = num_floors;
             }
             
             // check the upwards or downwards floor for the closest elevator
-            if(this.floor[nextClosestFloorDown][0]){
+            if(this._checkElevatorOnFloor(nextClosestFloorDown)){
+                
                 callback(nextClosestFloorDown);
-            }else if(Object.keys(this.floors[floor_no]).length == 0this.floor[nextClosestFloorUp][0]){
+
+
+            }else if(this._checkElevatorOnFloor(nextClosestFloorUp)){
                 callback(nextClosestFloorUp);
             }
         }
@@ -58,8 +73,20 @@ class Controller{
         
     }
     
-    _checkElevatorAvailableOnFloor(floor_no){
-        
+    
+    /**
+    * @param {int} get the next available elevator on the floor
+    */
+    _getElevatorAvailableOnFloor(floor_no, callback){
+        // call any of the elevators that are on this floor
+        let floor = this.floor[floor_no];
+        for (var elevator in floor) {
+            if(floor.hasOwnProperty(elevator)){
+                if(floor[elevator].isAvailable()){
+                    callback(floor[elevator]);
+                }
+            }
+        }
     }
     
     /**
@@ -69,15 +96,9 @@ class Controller{
     _checkElevatorOnFloor(floor_no){
         //check if any elevators are on the floor
         if(Object.keys(this.floors[floor_no]).length != 0){
-            // call any of the elevators that are on this floor
-            let floor = this.floor[floor_no];
-            for (var elevator in floor) {
-                if(floor.hasOwnProperty(elevator)){
-                    if(floor[elevator].request(floor_no)){
-                        return true;
-                    }
-                }
-            }
+            return true;
+        }else{
+            return false;
         }
     }
     
@@ -89,16 +110,28 @@ class Controller{
         
         let elevatorCalled = false;
         // call elevator on this floor if its there
-        if(this._callElevatorOnFloor(floor_no)){
-            elevatorCalled=true;
-        }
-        
-        else{
-            // check the next closest elevator up or down
-            this._findNextClosestElevator(floor_no, function(){
-                
+        if(this._checkElevatorOnFloor(floor_no)){
+            this._getElevatorAvailableOnFloor(floor_no, function(elevator){
+                if(elevator){
+                    elevator.request(floor_no);
+                    
+                } else {
+                    // no available elevators on floor
+                    // second option is to see if any elevators are crossing
+                    // this floor while moving
+                    if(elevatorCrossing){
+                        
+                    }else{
+                        // third option is to call the next closest elevator
+                        // from another floor
+                        this._findNextClosestElevator(floor_no, function(floor_no){
+
+                        });
+                    }
+                }
             });
         }
+        
 
     }
     
